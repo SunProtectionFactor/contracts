@@ -5,7 +5,9 @@ import { Contract, Signer } from 'ethers'
 
 describe('Waffle', () => {
     let owner: Signer
-    let slotBuyer: Signer
+    let slotBuyer1: Signer
+    let slotBuyer2: Signer
+
 
     let nftAddress: string
 
@@ -25,7 +27,7 @@ describe('Waffle', () => {
 
 
     before(async () => {
-      [owner, slotBuyer] = await ethers.getSigners()
+      [owner, slotBuyer1, slotBuyer2] = await ethers.getSigners()
       const waffleContractFactory = await ethers.getContractFactory("Waffle");
 
       const testERC721ContractFactory = await ethers.getContractFactory("TestERC721");
@@ -52,13 +54,27 @@ describe('Waffle', () => {
         })
     })
 
+    // describe('finalize waffle', () => {
+    //     it('should have the right number of slots', async () => {
+    //         await waffleContract.connect(slotBuyer1).purchaseSlot(NumSlotsAvail / 2, { value: (NumSlotsAvail * SlotPrice) / 2})
+    //         await waffleContract.connect(slotBuyer1).purchaseSlot(NumSlotsAvail / 2, { value: (NumSlotsAvail * SlotPrice) / 2})
+
+    //         await waffleContract.collectRandomWinner()
+    //         await waffleContract.fakeRandomness()
+    //         await waffleContract.disburseWinner()
+    //         expect(await testERC721.ownerOf(NftId)).to.equal(await slotBuyer1.getAddress())
+    //     })
+    // })
+
     describe('finalize waffle', () => {
         it('should have the right number of slots', async () => {
-            await waffleContract.connect(slotBuyer).purchaseSlot(NumSlotsAvail, { value: NumSlotsAvail * SlotPrice})
+            await waffleContract.connect(slotBuyer2).purchaseSlot((NumSlotsAvail / 2), { value: (NumSlotsAvail * SlotPrice) / 2})
+            await waffleContract.connect(slotBuyer1).purchaseSlot((NumSlotsAvail / 2), { value: (NumSlotsAvail * SlotPrice) / 2})
+
             await waffleContract.collectRandomWinner()
             await waffleContract.fakeRandomness()
             await waffleContract.disburseWinner()
-            expect(await testERC721.ownerOf(NftId)).to.equal(await slotBuyer.getAddress())
+            expect(await testERC721.ownerOf(NftId)).to.equal(await slotBuyer2.getAddress())
         })
     })
 })
