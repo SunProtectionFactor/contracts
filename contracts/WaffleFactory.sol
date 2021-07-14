@@ -7,9 +7,6 @@ import "./Waffle.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract WaffleFactory {
-  // ================ Constants ================
-  uint256 private constant MIN_DURATION = 1 hours; // seems reasonable
-  uint256 private constant MAX_DURATION = 100 days; // capping to protect against raffle's never expiring
   // ============ Immutable storage ============
 
   // Chainlink LINK token
@@ -68,9 +65,8 @@ contract WaffleFactory {
     // Require LINK balance of creator >= Chainlink VRF fee
     require(LINKToken.balanceOf(msg.sender) >= ChainlinkFee, "WaffleFactory: Insufficient LINK.");
 
-    require((_raffleExpiry - MIN_DURATION) >= block.timestamp, "WaffleFactory: Raffle duration must be greater than 1 hour");
+    require(_raffleExpiry >= block.timestamp, "WaffleFactory: Raffle expiration must be after current time");
 
-    require((_raffleExpiry - block.timestamp) <= MAX_DURATION , "WaffleFactory: Raffle duration must be less than 100 days");
 
     Waffle raffle = new Waffle(
       msg.sender,

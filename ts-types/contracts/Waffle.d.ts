@@ -26,6 +26,7 @@ interface WaffleInterface extends ethers.utils.Interface {
     "collectRandomWinner()": FunctionFragment;
     "deleteRaffle()": FunctionFragment;
     "disburseWinner()": FunctionFragment;
+    "fakeRandomness()": FunctionFragment;
     "nftContract()": FunctionFragment;
     "nftID()": FunctionFragment;
     "nftOwned()": FunctionFragment;
@@ -57,6 +58,10 @@ interface WaffleInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "disburseWinner",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fakeRandomness",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -122,6 +127,10 @@ interface WaffleInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "disburseWinner",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "fakeRandomness",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -239,6 +248,10 @@ export class Waffle extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    fakeRandomness(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     nftContract(overrides?: CallOverrides): Promise<[string]>;
 
     nftID(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -306,6 +319,10 @@ export class Waffle extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  fakeRandomness(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   nftContract(overrides?: CallOverrides): Promise<string>;
 
   nftID(overrides?: CallOverrides): Promise<BigNumber>;
@@ -363,6 +380,8 @@ export class Waffle extends BaseContract {
     deleteRaffle(overrides?: CallOverrides): Promise<void>;
 
     disburseWinner(overrides?: CallOverrides): Promise<void>;
+
+    fakeRandomness(overrides?: CallOverrides): Promise<void>;
 
     nftContract(overrides?: CallOverrides): Promise<string>;
 
@@ -451,6 +470,10 @@ export class Waffle extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    fakeRandomness(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     nftContract(overrides?: CallOverrides): Promise<BigNumber>;
 
     nftID(overrides?: CallOverrides): Promise<BigNumber>;
@@ -516,6 +539,10 @@ export class Waffle extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     disburseWinner(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    fakeRandomness(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

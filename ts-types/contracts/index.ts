@@ -4,17 +4,25 @@
 export type { VRFConsumerBase } from "./VRFConsumerBase";
 export type { LinkTokenInterface } from "./LinkTokenInterface";
 export type { IERC20 } from "./IERC20";
+export type { ERC721 } from "./ERC721";
+export type { IERC721Metadata } from "./IERC721Metadata";
 export type { IERC721 } from "./IERC721";
 export type { IERC721Receiver } from "./IERC721Receiver";
+export type { ERC165 } from "./ERC165";
 export type { IERC165 } from "./IERC165";
+export type { TestERC721 } from "./TestERC721";
 export type { Waffle } from "./Waffle";
 export type { WaffleFactory } from "./WaffleFactory";
 
 export { VRFConsumerBase__factory } from "./factories/VRFConsumerBase__factory";
 export { LinkTokenInterface__factory } from "./factories/LinkTokenInterface__factory";
 export { IERC20__factory } from "./factories/IERC20__factory";
+export { ERC721__factory } from "./factories/ERC721__factory";
+export { IERC721Metadata__factory } from "./factories/IERC721Metadata__factory";
 export { IERC721__factory } from "./factories/IERC721__factory";
 export { IERC721Receiver__factory } from "./factories/IERC721Receiver__factory";
+export { ERC165__factory } from "./factories/ERC165__factory";
 export { IERC165__factory } from "./factories/IERC165__factory";
+export { TestERC721__factory } from "./factories/TestERC721__factory";
 export { Waffle__factory } from "./factories/Waffle__factory";
 export { WaffleFactory__factory } from "./factories/WaffleFactory__factory";

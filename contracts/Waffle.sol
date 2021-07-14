@@ -6,8 +6,17 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@chainlink/contracts/src/v0.8/dev/VRFConsumerBase.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import "./SortitionSumTreeFactory.sol";
+import "./UniformRandomNumber.sol";
+import "hardhat/console.sol";
+
 
 contract Waffle is VRFConsumerBase, IERC721Receiver {
+  using SortitionSumTreeFactory for SortitionSumTreeFactory.SortitionSumTrees;
+
+  // ============ Constants storage ============
+  bytes32 constant private TREE_KEY = keccak256("WaffleDAO/Tickets");
+
   // ============ Immutable storage ============
 
   // Chainlink keyHash
@@ -27,6 +36,8 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
   // Assuming immutable raffle expiration
   uint256 public immutable raffleExpiry;
   // ============ Mutable storage ============
+  // SortitionSumTree
+  SortitionSumTreeFactory.SortitionSumTrees sortitionSumTrees;
 
   // Result from Chainlink VRF
   uint256 public randomResult = 0;
@@ -39,7 +50,8 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
   // Mapping of slot owners to number of slots owned
   mapping(address => uint256) public addressToSlotsOwned;
   // Toggled when contract holds NFT to raffle
-  bool public nftOwned = false;
+  // TODO: switch back false
+  bool public nftOwned = true;
 
   // ============ Events ============
 
@@ -75,6 +87,7 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
     slotPrice = _slotPrice;
     numSlotsAvailable = _numSlotsAvailable;
     raffleExpiry = _raffleExpiry;
+    sortitionSumTrees.createTree(TREE_KEY, _numSlotsAvailable);
   }
 
   // ============ Functions ============
@@ -95,20 +108,19 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
     require(msg.value == _numSlots * slotPrice, "Waffle: Insufficient ETH provided to purchase slots.");
     // Require number of slots to purchase to be <= number of available slots
     require(_numSlots <= numSlotsAvailable - numSlotsFilled, "Waffle: Requesting to purchase too many slots.");
+
+    console.log(block.timestamp);
+    console.log(raffleExpiry);
     
-    require(raffleExpiry >= block.timestamp, "Waffle: The raffle has expired");
-
-
-    // For each _numSlots
-    for (uint256 i = 0; i < _numSlots; i++) {
-      // Add address to slot owners array
-      slotOwners.push(msg.sender);
-    }
+    require(block.timestamp < raffleExpiry, "Waffle: The raffle has expired");
 
     // Increment filled slots
     numSlotsFilled = numSlotsFilled + _numSlots;
     // Increment slots owned by address
     addressToSlotsOwned[msg.sender] = addressToSlotsOwned[msg.sender] + _numSlots;
+
+    sortitionSumTrees.set(TREE_KEY, addressToSlotsOwned[msg.sender] + _numSlots, bytes32(bytes20(msg.sender)));
+
 
     // Emit claim event
     emit SlotsClaimed(msg.sender, _numSlots);
@@ -129,23 +141,7 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
     // should we allow refunds from an expired raffle that hasn't selected a winner??
     //require(raffleExpiry >= block.timestamp, "Waffle: The raffle has expired use collect random winner");
 
-    // Delete slots
-    uint256 idx = 0;
-    uint256 numToDelete = _numSlots;
-    // Loop through all entries while numToDelete still exist
-    while (idx < slotOwners.length && numToDelete > 0) {
-      // If address is not a match
-      if (slotOwners[idx] != msg.sender) {
-        // Only increment for non-matches. In case of match keep same to check against last idx item
-        idx++;
-      } else {
-        // Swap and pop
-        slotOwners[idx] = slotOwners[slotOwners.length - 1];
-        slotOwners.pop();
-        // Decrement num to delete
-        numToDelete--;
-      }
-    }
+    sortitionSumTrees.set(TREE_KEY, addressToSlotsOwned[msg.sender] - _numSlots, bytes32(bytes20(msg.sender)));
 
     // Repay raffle participant
     payable(msg.sender).transfer(_numSlots * slotPrice);
@@ -179,7 +175,7 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
     randomResultRequested = true;
 
     // Call for random number
-    return requestRandomness(keyHash, fee);
+    // TODO: removecomments return requestRandomness(keyHash, fee);
   }
   
   function _checkSlotsFilledOrExpired() private view returns (bool) {
@@ -194,7 +190,13 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
    */
   function fulfillRandomness(bytes32 requestId, uint256 randomness) internal override {
     // Store random number as randomResult
+    // TODO: absolutely take this out
+    // randomResult = uint256(blockhash(block.number-1));
     randomResult = randomness;
+  }
+
+  function fakeRandomness() external {
+    randomResult = uint256(blockhash(block.number-1));
   }
 
   /**
@@ -211,8 +213,12 @@ contract Waffle is VRFConsumerBase, IERC721Receiver {
     // Transfer raised raffle pool to owner
     payable(owner).transfer(address(this).balance);
 
-    // Find winner of NFT
-    address winner = slotOwners[randomResult % numSlotsFilled];
+    uint256 token = UniformRandomNumber.uniform(uint256(randomResult), numSlotsAvailable);
+    address winner = address(bytes20(sortitionSumTrees.draw(TREE_KEY, token)));
+    console.log(winner);
+
+    // // Find winner of NFT
+    // address winner = slotOwners[randomResult % numSlotsFilled];
 
     // Transfer NFT to winner
     IERC721(nftContract).safeTransferFrom(address(this), winner, nftID);
